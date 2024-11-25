@@ -2,31 +2,44 @@ import openai
 import os
 
 def generate_html(prompt):
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system",
-                "content": "You are a programmer only producting high quality code"},
-            {"role": "user", "content": "I want you to create HTML code based on the input text: Hello World Page. Reply only with HTML code no other comments"},
-            {"role": "assistant", "content": """<!DOCTYPE html>
-                                                <html>
-                                                <head>
-                                                    <title>Hello World Page</title>
-                                                </head>
-                                                <body>
-                                                    <h1>Hello World</h1>
-                                                <img src="horse1.jpg" style="height: 300px; width: 400px;" class="img1" alt="Photo of a playful chestnut mare with a short mane and tail, rolling in the dirt. The horse is lying on its back with its legs in the air, looking happy and content."/>
-                                                <img src="horse2.jpg" style="height: 300px; width: 400px;" class="img2" alt="Photo of a handsome bay gelding with a short mane and tail, standing in a stable. The horse is looking out of its stall with a calm expression on its face, and its ears perked up."/>
-                                                </body>
-                                                </html>}""",
-             },
-            {"role": "user", "content": prompt},
-        ],
-        n=1,
-        temperature=0.5,
-    )
-    print(response['choices'][0]['message']['content'])
-    return response['choices'][0]['message']['content']
-
-
-
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a programmer only producing high quality HTML code. Always include proper HTML structure with doctype, head, and body tags."},
+                {"role": "user", "content": prompt},
+            ],
+            n=1,
+            temperature=0.7,
+        )
+        
+        content = response['choices'][0]['message']['content']
+        if not content or not isinstance(content, str):
+            raise ValueError("Invalid response from OpenAI API")
+            
+        # Ensure the content has basic HTML structure
+        if not content.strip().startswith('<!DOCTYPE html>'):
+            content = f"""<!DOCTYPE html>
+<html>
+<head>
+    <title>Generated Website</title>
+</head>
+<body>
+{content}
+</body>
+</html>"""
+            
+        return content
+    except Exception as e:
+        print(f"Error generating HTML: {str(e)}")
+        # Return a basic valid HTML structure
+        return """<!DOCTYPE html>
+<html>
+<head>
+    <title>Error Page</title>
+</head>
+<body>
+    <h1>Error Generating Content</h1>
+    <p>There was an error generating the content. Please try again.</p>
+</body>
+</html>"""
